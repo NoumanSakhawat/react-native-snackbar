@@ -1,5 +1,10 @@
 package com.azendoo.reactnativesnackbar;
 
+import android.content.Context;
+import android.util.DisplayMetrics;
+import android.widget.FrameLayout;
+
+
 import android.graphics.Color;
 import android.graphics.Typeface;
 import com.google.android.material.snackbar.Snackbar;
@@ -8,6 +13,8 @@ import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.core.content.ContextCompat;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -93,6 +100,11 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
         int duration = getOptionValue(options, "duration", Snackbar.LENGTH_SHORT);
         int textColor = getOptionValue(options, "textColor", Color.WHITE);
         boolean rtl = getOptionValue(options, "rtl", false);
+
+        int left_ = options.hasKey("left") ? options.getInt("left") : 0;
+        int right_ = options.hasKey("right") ? options.getInt("right") : 0;
+        int bottom_ = options.hasKey("bottom") ? options.getInt("bottom") : 0;
+
         String fontFamily = getOptionValue(options, "fontFamily", null);
         Typeface font = null;
         if (fontFamily != null) {
@@ -112,8 +124,18 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
             snackbarView.setTextDirection(View.TEXT_DIRECTION_RTL);
         }
 
+        FrameLayout.LayoutParams param = (FrameLayout.LayoutParams) snackbarView.getLayoutParams();
+        param.setMargins(
+                (int)convertDpToPixel(left_ ,snackbarView.getContext()),
+                0,
+                (int)convertDpToPixel(right_ ,snackbarView.getContext()),
+                (int)convertDpToPixel(bottom_ ,snackbarView.getContext()));
+        snackbarView.setLayoutParams(param );
+
         TextView snackbarText = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
         snackbarText.setTextColor(textColor);
+        snackbarText.setMaxLines(200);  // show multiple line
+
 
         if (font != null) {
             snackbarText.setTypeface(font);
@@ -122,8 +144,10 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
         mActiveSnackbars.add(snackbar);
 
         if (options.hasKey("backgroundColor")) {
-            snackbarView.setBackgroundColor(options.getInt("backgroundColor"));
+snackbarView.setBackground(ContextCompat.getDrawable(getCurrentActivity() , R.drawable.snackbar_radius));
+
         }
+
 
         if (options.hasKey("action")) {
             ReadableMap actionOptions = options.getMap("action");
@@ -153,6 +177,10 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
         }
 
         snackbar.show();
+    }
+
+    public static float convertDpToPixel(float dp, Context context){
+        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 
     /**
